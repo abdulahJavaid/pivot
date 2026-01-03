@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProTrader | Daily Pivot Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --resistance: #28A745;
+            --support: #DC3545;
+            --text-main: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid #334155;
+            position: relative;
+        }
+
+        h2 { text-align: center; color: var(--accent-blue); margin-bottom: 0.5rem; }
+        
+        #displayDate {
+            text-align: center; 
+            font-size: 0.85rem; 
+            color: #94a3b8; 
+            margin-bottom: 1.5rem;
+            display: none; 
+        }
+
+        .input-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #94a3b8; }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-dark);
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        .results { margin-top: 2rem; display: none; }
+
+        .level-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .res-text { color: var(--resistance); font-weight: bold; }
+        .sup-text { color: var(--support); font-weight: bold; }
+        .pivot-text { color: var(--accent-blue); font-weight: bold; }
+
+        .btn-export {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            border: 1px solid var(--accent-blue);
+            background: transparent;
+            color: var(--accent-blue);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* UPDATED FOOTER SECTION */
+        .contact-footer {
+            margin-top: 25px;
+            text-align: center;
+            font-size: 0.85rem;
+            border-top: 1px solid #334155;
+            padding-top: 15px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            margin: 5px 0;
+        }
+
+        .contact-link:hover {
+            color: var(--accent-blue);
+        }
+
+        .contact-link i { margin-right: 6px; }
+
+        .divider {
+            height: 14px;
+            width: 1px;
+            background-color: #334155;
+            margin: 0 12px;
+        }
+
+        @media (max-width: 400px) {
+            .divider { display: none; }
+            .contact-footer { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="captureArea">
+    <h2>Daily Pivot Points</h2>
+    <div id="displayDate"></div>
+    
+    <div class="input-group" id="inputSectionH">
+        <label>Previous High</label>
+        <input type="number" id="high" placeholder="0.00">
+    </div>
+    <div class="input-group" id="inputSectionL">
+        <label>Previous Low</label>
+        <input type="number" id="low" placeholder="0.00">
+    </div>
+    <div class="input-group" id="inputSectionC">
+        <label>Previous Close</label>
+        <input type="number" id="close" placeholder="0.00">
+    </div>
+
+    <button class="btn-main" id="calcBtn" onclick="calculatePivots()">Calculate Levels</button>
+
+    <div class="results" id="resultsBox">
+        <div class="level-row"><span class="res-text">Resistance 3 (R3)</span> <span id="r3">0</span></div>
+        <div class="level-row"><span class="res-text">Resistance 2 (R2)</span> <span id="r2">0</span></div>
+        <div class="level-row"><span class="res-text">Resistance 1 (R1)</span> <span id="r1">0</span></div>
+        <div class="level-row"><span class="pivot-text">PIVOT POINT (PP)</span> <span id="pp">0</span></div>
+        <div class="level-row"><span class="sup-text">Support 1 (S1)</span> <span id="s1">0</span></div>
+        <div class="level-row"><span class="sup-text">Support 2 (S2)</span> <span id="s2">0</span></div>
+        <div class="level-row"><span class="sup-text">Support 3 (S3)</span> <span id="s3">0</span></div>
+        
+        <button class="btn-export" id="exportBtn" onclick="downloadJPG()">
+            <i class="fas fa-camera"></i> Download High-Res Image (JPG)
+       </button>
+    </div>
+
+    <div class="contact-footer" id="contactSection">
+        <a href="https://wa.me/923102434222" class="contact-link" target="_blank">
+            <i class="fab fa-whatsapp"></i> +92 310 2434222
+        </a>
+        <span class="divider"></span>
+        <a href="mailto:hassangraphicx786@gmail.com" class="contact-link">
+            <i class="fas fa-envelope"></i> hassangraphicx786@gmail.com
+        </a>
+    </div>
+</div>
+
+<script>
+    function calculatePivots() {
+        const H = parseFloat(document.getElementById('high').value);
+        const L = parseFloat(document.getElementById('low').value);
+        const C = parseFloat(document.getElementById('close').value);
+
+        if (isNaN(H) || isNaN(L) || isNaN(C)) {
+            alert("Please enter valid numbers");
+            return;
+        }
+
+        const pp = (H + L + C) / 3;
+        document.getElementById('pp').innerText = pp.toFixed(2);
+        document.getElementById('r1').innerText = ((pp * 2) - L).toFixed(2);
+        document.getElementById('r2').innerText = (pp + (H - L)).toFixed(2);
+        document.getElementById('r3').innerText = (H + 2 * (pp - L)).toFixed(2);
+        document.getElementById('s1').innerText = ((pp * 2) - H).toFixed(2);
+        document.getElementById('s2').innerText = (pp - (H - L)).toFixed(2);
+        document.getElementById('s3').innerText = (L - 2 * (H - pp)).toFixed(2);
+
+        document.getElementById('resultsBox').style.display = 'block';
+    }
+
+    function downloadJPG() {
+        const exportBtn = document.getElementById('exportBtn');
+        const calcBtn = document.getElementById('calcBtn');
+        const dateDiv = document.getElementById('displayDate');
+        
+        const now = new Date();
+        dateDiv.innerText = "Date: " + now.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+        dateDiv.style.display = 'block';
+
+        exportBtn.style.display = 'none';
+        calcBtn.style.display = 'none';
+
+        html2canvas(document.getElementById('captureArea'), { 
+            scale: 3,
+            backgroundColor: "#0f172a" 
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'Pivots_' + now.toLocaleDateString().replace(/\//g, '-') + '.jpg';
+            link.href = canvas.toDataURL('image/jpeg', 1.0);
+            link.click();
+
+            exportBtn.style.display = 'flex';
+            calcBtn.style.display = 'block';
+            dateDiv.style.display = 'none';
+        });
+    }
+</script>
+
+</body>
+</html>
